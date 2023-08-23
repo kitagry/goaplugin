@@ -1,10 +1,9 @@
 package calcapi
 
 import (
-	"context"
-
 	calc "calc/gen/calc"
 	log "calc/gen/log"
+	"context"
 )
 
 // calc service example implementation.
@@ -20,12 +19,12 @@ func NewCalc(logger *log.Logger) calc.Service {
 
 // Add implements add.
 func (s *calcsrvc) Add(ctx context.Context, p *calc.AddPayload) (res int, err error) {
-	s.logger.InfoContext(ctx, "calc.add")
+	s.logger.Print("calc.add")
 	return
 }
 
 // Healthz implements healthz.
 func (s *calcsrvc) Healthz(ctx context.Context) (err error) {
-	s.logger.InfoContext(ctx, "calc.healthz")
+	s.logger.Print("calc.healthz")
 	return
 }
