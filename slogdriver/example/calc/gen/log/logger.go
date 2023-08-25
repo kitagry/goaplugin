@@ -38,8 +38,8 @@ func (logger *Logger) Log(keyvals ...any) error {
 }
 
 // Print is called by the log middleware
-func (logger *Logger) Print(msg string) {
-	logger.Logger.Info(msg)
+func (logger *Logger) Print(v ...any) {
+	logger.Logger.Info(fmt.Sprint(v...))
 }
 
 // Printf is called by the log middleware
@@ -48,13 +48,13 @@ func (logger *Logger) Printf(msg string, args ...any) {
 }
 
 // Println is called by the log middleware
-func (logger *Logger) Println(msg string) {
-	logger.Logger.Info(msg)
+func (logger *Logger) Println(v ...any) {
+	logger.Logger.Info(fmt.Sprint(v...))
 }
 
 // Fatal is called by the log middleware
-func (logger *Logger) Fatal(msg string) {
-	logger.Logger.Log(context.Background(), slogdriver.LevelCritical, msg)
+func (logger *Logger) Fatal(v ...any) {
+	logger.Logger.Log(context.Background(), slogdriver.LevelCritical, fmt.Sprint(v...))
 	os.Exit(1)
 }
 
@@ -65,8 +65,8 @@ func (logger *Logger) Fatalf(msg string, args ...any) {
 }
 
 // Fatalln is called by the log middleware
-func (logger *Logger) Fataln(msg string) {
-	logger.Logger.Log(context.Background(), slogdriver.LevelCritical, msg)
+func (logger *Logger) Fataln(v ...any) {
+	logger.Logger.Log(context.Background(), slogdriver.LevelCritical, fmt.Sprint(v...))
 	os.Exit(1)
 }
 
