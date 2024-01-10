@@ -198,6 +198,40 @@ func (logger *Logger) Fataln(v ...any) {
 	os.Exit(1)
 }
 
+// responseCapture is a http.ResponseWriter which captures the response status
+// code and content length.
+type responseCapture struct {
+	http.ResponseWriter
+	StatusCode    int
+	ContentLength int
+}
+
+// captureResponse creates a ResponseCapture that wraps the given ResponseWriter.
+func captureResponse(w http.ResponseWriter) *responseCapture {
+	return &responseCapture{ResponseWriter: w}
+}
+
+// WriteHeader records the value of the status code before writing it.
+func (w *responseCapture) WriteHeader(code int) {
+	w.StatusCode = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+// Write computes the written len and stores it in ContentLength.
+func (w *responseCapture) Write(b []byte) (int, error) {
+	n, err := w.ResponseWriter.Write(b)
+	w.ContentLength += n
+	return n, err
+}
+
+// Flush implements the http.Flusher interface if the underlying response
+// writer supports it.
+func (w *responseCapture) Flush() {
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
 // FormatFields formats input keyvals
 // ref: https://github.com/goadesign/goa/blob/v1/logging/logrus/adapter.go#L64
 func FormatFields(keyvals []any) map[string]any {
@@ -231,7 +265,7 @@ func slogdriverHttpMiddleware(logger *Logger, healthCheckPaths []string) func(h 
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			rw := httpmdlwr.CaptureResponse(w)
+			rw := captureResponse(w)
 			h.ServeHTTP(rw, r)
 
 			var res http.Response
