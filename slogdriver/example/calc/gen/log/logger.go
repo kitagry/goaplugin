@@ -10,6 +10,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -26,8 +27,8 @@ type Logger struct {
 }
 
 // New creates a new slogdriver logger
-func New(opts slogdriver.HandlerOptions) *Logger {
-	logger := slogdriver.New(os.Stdout, opts)
+func New(w io.Writer, opts slogdriver.HandlerOptions) *Logger {
+	logger := slogdriver.New(w, opts)
 	return &Logger{logger}
 }
 

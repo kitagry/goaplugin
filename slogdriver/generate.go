@@ -95,6 +95,7 @@ func GenerateLoggerFile(genpkg string) *codegen.File {
 			{Path: "goa.design/goa/v3/http/middleware", Name: "httpmdlwr"},
 			{Path: "goa.design/goa/v3/middleware"},
 			{Path: "os"},
+			{Path: "io"},
 			{Path: "fmt"},
 			{Path: "net/http"},
 			{Path: "time"},
@@ -131,7 +132,7 @@ func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
 
 		for _, s := range f.file.SectionTemplates {
 			s.Source = strings.Replace(s.Source, `logger = log.New(os.Stderr, "[{{ .APIPkg }}] ", log.Ltime)`,
-				`logger = log.New(slogdriver.HandlerOptions{})`, 1)
+				`logger = log.New(os.Stderr, slogdriver.HandlerOptions{})`, 1)
 			s.Source = strings.Replace(s.Source, "adapter = middleware.NewLogger(logger)", "adapter = logger", 1)
 			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.Log(adapter)(handler)", fmt.Sprintf("handler = log.SlogdriverHttpMiddleware(adapter, []string{%s})(handler)", strings.Join(healthPaths, ", ")), 1)
 			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.RequestID()(handler)",
@@ -161,8 +162,8 @@ type Logger struct {
 	*slog.Logger
 }
 // New creates a new slogdriver logger
-func New(opts slogdriver.HandlerOptions) *Logger {
-	logger := slogdriver.New(os.Stdout, opts)
+func New(w io.Writer, opts slogdriver.HandlerOptions) *Logger {
+	logger := slogdriver.New(w, opts)
 	return &Logger{logger}
 }
 // Log is called by the log middleware to log HTTP requests key values
