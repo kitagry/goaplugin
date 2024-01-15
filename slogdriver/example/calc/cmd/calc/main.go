@@ -36,7 +36,7 @@ func main() {
 		logger *log.Logger
 	)
 	{
-		logger = log.New(slogdriver.HandlerOptions{})
+		logger = log.New(os.Stderr, slogdriver.HandlerOptions{})
 	}
 
 	// Initialize the services.
