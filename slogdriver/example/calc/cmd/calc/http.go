@@ -69,8 +69,6 @@ func handleHTTPServer(ctx context.Context, u *url.URL, calcEndpoints *calc.Endpo
 	var handler http.Handler = mux
 	{
 		handler = log.SlogdriverHttpMiddleware(adapter, []string{"/healthz"})(handler)
-		handler = httpmdlwr.PopulateRequestContext()(handler)
-		handler = httpmdlwr.RequestID(httpmdlwr.UseXRequestIDHeaderOption(true))(handler)
 	}
 
 	// Start HTTP server using default configuration, change the code to
@@ -105,12 +103,8 @@ func handleHTTPServer(ctx context.Context, u *url.URL, calcEndpoints *calc.Endpo
 }
 
 // errorHandler returns a function that writes and logs the given error.
-// The function also writes and logs the error unique ID so that it's possible
-// to correlate.
 func errorHandler(logger *log.Logger) func(context.Context, http.ResponseWriter, error) {
 	return func(ctx context.Context, w http.ResponseWriter, err error) {
-		id := ctx.Value(middleware.RequestIDKey).(string)
-		_, _ = w.Write([]byte("[" + id + "] encoding: " + err.Error()))
-		logger.Error(err.Error(), "id", id)
+		logger.ErrorContext(ctx, err.Error())
 	}
 }

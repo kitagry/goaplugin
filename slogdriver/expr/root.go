@@ -1,6 +1,8 @@
 package expr
 
 import (
+	"log"
+
 	"goa.design/goa/v3/eval"
 	"goa.design/goa/v3/expr"
 )
@@ -14,7 +16,10 @@ type RootExpr struct {
 }
 
 func init() {
-	eval.Register(Root)
+	err := eval.Register(Root)
+	if err != nil {
+		log.Fatalf("failed to eval.Register: %v", err)
+	}
 }
 
 // EvalName returns the name used in error messages.

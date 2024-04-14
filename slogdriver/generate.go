@@ -87,7 +87,7 @@ func GenerateFiles(genpkg string, root *expr.RootExpr) []*codegen.File {
 // GenerateLoggerFile returns the generated slogdriver logger file.
 func GenerateLoggerFile(genpkg string) *codegen.File {
 	path := filepath.Join(codegen.Gendir, "log", "logger.go")
-	title := fmt.Sprint("slogdriver logger implementation")
+	title := "slogdriver logger implementation"
 	sections := []*codegen.SectionTemplate{
 		codegen.Header(title, "log", []*codegen.ImportSpec{
 			{Path: "github.com/kitagry/slogdriver"},
@@ -131,15 +131,25 @@ func updateExampleFile(genpkg string, root *expr.RootExpr, f *fileToModify) {
 		healthPaths := buildHealthCheckPaths()
 
 		for _, s := range f.file.SectionTemplates {
-			s.Source = strings.Replace(s.Source, `logger = log.New(os.Stderr, "[{{ .APIPkg }}] ", log.Ltime)`,
-				`logger = log.New(os.Stderr, slogdriver.HandlerOptions{})`, 1)
-			s.Source = strings.Replace(s.Source, "adapter = middleware.NewLogger(logger)", "adapter = logger", 1)
-			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.Log(adapter)(handler)", fmt.Sprintf("handler = log.SlogdriverHttpMiddleware(adapter, []string{%s})(handler)", strings.Join(healthPaths, ", ")), 1)
-			s.Source = strings.Replace(s.Source, "handler = httpmdlwr.RequestID()(handler)",
-				`handler = httpmdlwr.PopulateRequestContext()(handler)
-				handler = httpmdlwr.RequestID(httpmdlwr.UseXRequestIDHeaderOption(true))(handler)`, 1)
-			s.Source = strings.Replace(s.Source, `logger.Printf("[%s] ERROR: %s", id, err.Error())`,
-				`logger.Error(err.Error(), "id", id)`, 1)
+			switch s.Name {
+			case "server-main-logger":
+				s.Source = strings.Replace(s.Source, `logger = log.New(os.Stderr, "[{{ .APIPkg }}] ", log.Ltime)`,
+					`logger = log.New(os.Stderr, slogdriver.HandlerOptions{})`, 1)
+			case "server-http-logger":
+				s.Source = strings.Replace(s.Source, "adapter = middleware.NewLogger(logger)", "adapter = logger", 1)
+			case "server-http-middleware":
+				s.Source = strings.Replace(s.Source, "handler = httpmdlwr.Log(adapter)(handler)", fmt.Sprintf("handler = log.SlogdriverHttpMiddleware(adapter, []string{%s})(handler)", strings.Join(healthPaths, ", ")), 1)
+				// RequestID is deprecated. And, slogdriver can set openTelemetry id.
+				s.Source = strings.Replace(s.Source, "handler = httpmdlwr.RequestID()(handler)\n", ``, 1)
+			case "server-http-errorhandler":
+				s.Source = `// errorHandler returns a function that writes and logs the given error.
+func errorHandler(logger *log.Logger) func(context.Context, http.ResponseWriter, error) {
+        return func(ctx context.Context, w http.ResponseWriter, err error) {
+                logger.ErrorContext(ctx, err.Error())
+        }
+}
+`
+			}
 		}
 	}
 }
