@@ -87,7 +87,7 @@ func GenerateFiles(genpkg string, root *expr.RootExpr) []*codegen.File {
 // GenerateLoggerFile returns the generated slogdriver logger file.
 func GenerateLoggerFile(genpkg string) *codegen.File {
 	path := filepath.Join(codegen.Gendir, "log", "logger.go")
-	title := fmt.Sprint("slogdriver logger implementation")
+	title := "slogdriver logger implementation"
 	sections := []*codegen.SectionTemplate{
 		codegen.Header(title, "log", []*codegen.ImportSpec{
 			{Path: "github.com/kitagry/slogdriver"},
