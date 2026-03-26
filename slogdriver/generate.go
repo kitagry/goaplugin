@@ -300,7 +300,7 @@ func slogdriverHttpMiddleware(logger *Logger, healthCheckPaths []string) func(h 
 				return
 			}
 
-			logger.Logger.Log(r.Context(), level, "request finished", slogdriver.HTTPKey, p)
+			logger.Logger.Log(r.Context(), level, "", slogdriver.HTTPKey, p)
 		})
 	}
 }
